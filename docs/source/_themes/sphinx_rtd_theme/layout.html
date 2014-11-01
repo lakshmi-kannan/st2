@@ -77,13 +77,40 @@
 
 <body class="wy-body-for-nav" role="document">
 
+  <header>
+    <div class="container clearfix">
+
+      <a href="/" class="logo">
+        <img src="{{ pathto('_static/img/stackstorm-logo-header.png', 1) }}"
+          alt="StackStorm" id="logo">
+      </a>
+
+      <nav class="top-menu-nav">
+        <ul class="nav">
+          <li class="menu-item">
+            <a href="//stackstorm.com/product">Product</a>
+          </li>
+          <li class="menu-item">
+            <a href="//stackstorm.com/community">Community</a>
+          </li>
+          <li class="menu-item">
+            <a href="//stackstorm.com/contact">Contact</a>
+          </li>
+          <li class="menu-item stack-header-button">
+            <a href="//stackstorm.com/start-now">START NOW!</a>
+          </li>
+        </ul>
+      </nav>
+    </div> <!-- .container -->
+  </header>
+
   <div class="wy-grid-for-nav">
 
     {# SIDE NAV, TOGGLES ON MOBILE #}
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-nav-search">
         {% block sidebartitle %}
-          <a href="{{ pathto(master_doc) }}" class="fa fa-home"> {{ project }}</a>
+          <a href="{{ pathto(master_doc) }}" class="fa fa-home"> Index</a>
         {% endblock %}
         {% include "searchbox.html" %}
       </div>
