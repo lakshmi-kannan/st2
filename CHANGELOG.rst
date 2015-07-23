@@ -4,6 +4,10 @@ Changelog
 in development
 --------------
 
+
+0.16 - None
+-----------
+
 * Add new OpenStack Keystone authentication backend.
   [Itxaka Serrano]
 
