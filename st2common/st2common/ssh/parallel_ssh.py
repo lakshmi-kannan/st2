@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import os
+import uuid
 
 import eventlet
 
@@ -58,7 +59,7 @@ class ParallelSSHClient(object):
                     raise
                 self._bad_hosts.append(host)
             else:
-                self._hosts_client[host] = client
+                self._hosts_client[host + ':' + str(uuid.uuid4())] = client
 
     def run(self, cmd, timeout=None, cwd=None):
         results = {}
@@ -77,8 +78,8 @@ class ParallelSSHClient(object):
         for host in self._hosts_client.keys():
             while not self._pool.free():
                 eventlet.sleep(self._scan_interval)
-            self._pool.spawn(self._run_command, cmd=cmd, host=host,
-                             results=results, timeout=timeout)
+            self._pool.spawn(self._run_command, cmd=cmd, host=host.split(':')[0],
+                             results=results, timeout=timeout, result_key=host)
 
         self._pool.waitall()
         return jsonify.json_loads(results, ParallelSSHClient.KEYS_TO_TRANSFORM)
@@ -99,14 +100,16 @@ class ParallelSSHClient(object):
         self._pool.waitall()
         return results
 
-    def _run_command(self, host, cmd, results, timeout=None):
+    def _run_command(self, host, cmd, results, timeout=None, result_key=None):
         try:
             LOG.debug('Running command: %s on host: %s.', cmd, host)
-            client = self._hosts_client[host]
+            client = self._hosts_client[result_key]
             (stdout, stderr, exit_code) = client.run(cmd, timeout=timeout)
             is_succeeded = (exit_code == 0)
-            results[host] = {'stdout': stdout, 'stderr': stderr, 'exit_code': exit_code,
-                             'succeeded': is_succeeded, 'failed': not is_succeeded}
+            if not result_key:
+                result_key = host
+            results[result_key] = {'stdout': stdout, 'stderr': stderr, 'exit_code': exit_code,
+                                   'succeeded': is_succeeded, 'failed': not is_succeeded}
         except:
             LOG.exception('Failed executing command %s on host %s', cmd, host)
 

@@ -17,8 +17,14 @@ eventlet.monkey_patch(
     time=True)
 
 
-def main(user, pkey, hosts_str, cmd, file_path, dir_path):
+def main(user, pkey, hosts_str, cmd, file_path, dir_path, repeat):
     hosts = hosts_str.split(",")
+    if repeat:
+        hosts_list = []
+        for i in range(repeat):
+            hosts_list.extend(hosts)
+        hosts = hosts_list
+
     client = ParallelSSHClient(user, pkey, hosts)
     pp = pprint.PrettyPrinter(indent=4)
 
@@ -39,14 +45,18 @@ def main(user, pkey, hosts_str, cmd, file_path, dir_path):
         pp.pprint('ls results: \n%s' % results)
 
     if cmd:
-        results = client.run(cmd)
-        pp.pprint('cmd results: \n%s' % results)
+        results = client.run(cmd, cwd='/tmp')
+        print('Command was: %s' % cmd)
+        print('Results:\n\n')
+        pp.pprint(results)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Parallel SSH tester.')
     parser.add_argument('--hosts', required=True,
                         help='List of hosts to connect to')
+    parser.add_argument('--repeat', required=False, type=int,
+                        help='Number of times to repeat the host.')
     parser.add_argument('--private-key', required=True,
                         help='Private key to use.')
     parser.add_argument('--user', required=True,
@@ -60,4 +70,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(user=args.user, pkey=args.private_key, hosts_str=args.hosts, cmd=args.cmd,
-         file_path=args.file, dir_path=args.dir)
+         file_path=args.file, dir_path=args.dir, repeat=args.repeat)
