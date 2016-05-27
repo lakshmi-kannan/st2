@@ -13,24 +13,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
 from st2pyclient.http_client.base import BaseClient
+from st2pyclient.http_client.token import TokenClient
+
+LOG = logging.getLogger(__name__)
 
 
 class AuthedClient(BaseClient):
 
-    def __init__(self, auth_base_url=None, auth_api_version='v1', auth_credentials=None,
-                 api_base_url=None, api_version='v1', creds_file_path='~/.st2/config',
-                 debug=False):
+    def __init__(self, user=None, password=None, api_key=None,
+                 auth_base_url=None, auth_api_version='v1',
+                 api_base_url=None, api_version='v1', debug=False):
         self._auth_base_url = auth_base_url
         self._auth_api_version = auth_api_version
-        self._auth_credentials = auth_credentials
-
-        if not self._auth_credentials:
-            self._auth_credentials = self._get_credentials_from_file(creds_file_path)
-
+        self._user = user
+        self._password = password
+        self._api_key = api_key
         self._api_base_url = api_base_url
         self._api_version = api_version
-        self._token = self._negotiate_auth_token()
+        if self._api_key:
+            self._is_api_key_auth = True
+            self._api_key_headers = {'St2-Api-Key': self._api_key}
+        else:
+            self._is_token_auth = True
+            self._token_client = TokenClient(
+                auth_base_url=auth_base_url,
+                auth_api_version=auth_api_version,
+                user=user,
+                password=password
+            )
         self._debug = debug
 
     def post(self, relative_url, payload, debug=False):
@@ -53,19 +66,15 @@ class AuthedClient(BaseClient):
                                          headers=self._get_auth_headers(),
                                          debug=self._debug or debug)
 
-    def _negotiate_auth_token(self):
-        pass
-
     def _get_auth_headers(self):
-        if self._is_token_expired(self._token):
-            self._token = self._negotiate_auth_token()
+        if self._is_api_key_auth:
+            return self._api_key_headers
 
-        headers = {'X-Auth-Token': self._token['token']}
-        return headers
-
-    @staticmethod
-    def _get_credentials_from_file(file_path):
-        pass
+        try:
+            return {'X-Auth-Token': self._token_client.get_token()}
+        except:
+            LOG.exception('Failed negotiating auth token with st2!')
+            raise
 
     @staticmethod
     def _is_token_expired(token):

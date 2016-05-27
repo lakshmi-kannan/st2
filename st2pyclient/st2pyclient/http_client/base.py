@@ -17,7 +17,7 @@ try:
     import simplejson as json
 except ImportError:
     import json
-import urlparse
+from urlparse import urlparse
 
 import requests
 
@@ -35,25 +35,25 @@ class BaseClient(object):
         full_url = self._get_full_url()
         resp = requests.post(full_url, data=json.dumps(payload), headers=headers)
         if self._debug or debug:
-            self._log_request_resp(url=full_url, payload=payload, headers=headers, resp=resp)
+            self.log_request_resp(url=full_url, payload=payload, headers=headers, resp=resp)
 
     def put(self, relative_url, payload, headers=None, debug=False):
         full_url = self._get_full_url()
         resp = requests.put(self._get_full_url(), data=json.dumps(payload), headers=headers)
         if self._debug or debug:
-            self._log_request_resp(url=full_url, payload=payload, headers=headers, resp=resp)
+            self.log_request_resp(url=full_url, payload=payload, headers=headers, resp=resp)
 
     def get(self, relative_url, payload=None, headers=None, debug=False):
         full_url = self._get_full_url()
         resp = requests.get(self._get_full_url(), data=json.dumps(payload), headers=headers)
         if self._debug or debug:
-            self._log_request_resp(url=full_url, payload=payload, headers=headers, resp=resp)
+            self.log_request_resp(url=full_url, payload=payload, headers=headers, resp=resp)
 
     def delete(self, relative_url, headers=None, debug=False):
         full_url = self._get_full_url()
         resp = requests.get(self._get_full_url(), headers=headers)
         if self._debug or debug:
-            self._log_request_resp(url=full_url, headers=headers, resp=resp)
+            self.log_request_resp(url=full_url, headers=headers, resp=resp)
 
     def _get_full_url(self, relative_url):
         return urlparse.join(self._versioned_base_url, relative_url)
